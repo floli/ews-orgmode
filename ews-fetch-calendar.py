@@ -56,29 +56,41 @@ def format_orgmode_time(dateObj):
   return dateObj.strftime("%H:%M")
 
 # Helper function to write an orgmode entry
-def print_orgmode_entry(subject, start, end, location, response):
+def print_orgmode_entry(subject, start, end, reminder, location, response, participants):
   startDate = parse_ews_date(start);
   endDate = parse_ews_date(end);
+  reminderDate = parse_ews_date(reminder)
+  
+  # if subject is not None:
+    # if dateStr != "":
+      # print "* " + subject.encode('utf-8', 'ignore')
+    # else:
+      # print "* " + subject.encode('utf-8', 'ignore')
+
+  if subject is not None:
+    print ("* " + subject.encode('utf-8', 'ignore'))
+  else:
+    print ("* Kein Betreff")
+  
   # Check if the appointment starts and ends on the same day and use proper formatting
   dateStr = ""
   if startDate.date() == endDate.date():
-    dateStr = "<" +  format_orgmode_date(startDate) + "-" + format_orgmode_time(endDate) + ">"
+    dateStr = "SCHEDULED: <" +  format_orgmode_date(startDate) + "-" + format_orgmode_time(endDate) + ">"
   else:
-    dateStr = "<" +  format_orgmode_date(startDate) + ">--<" + format_orgmode_date(endDate) + ">"
+    dateStr = "SCHEDULED: <" +  format_orgmode_date(startDate) + ">--<" + format_orgmode_date(endDate) + ">"
 
-  if subject is not None:
-    if dateStr != "":
-      print "* " + dateStr + " " + subject.encode('ascii', 'ignore')
-    else:
-      print "* " + subject.encode('ascii', 'ignore')
-
+  reminderStr = "DEADLINE: <" + format_orgmode_date(reminderDate) + "-" + format_orgmode_time(reminderDate) + ">"
+    
+  print (dateStr + " " + reminderStr)
+    
   if location is not None:
-    print ":PROPERTIES:"
-    print ":LOCATION: " + location.encode('utf-8')
-    print ":RESPONSE: " + response.encode('utf-8')
-    print ":END:"
+    print (":PROPERTIES:")
+    print (":LOCATION: " + location.encode('utf-8'))
+    print (":RESPONSE: " + response.encode('utf-8'))
+    print (":PARTICIPANTS: " + participants.encode('utf-8'))
+    print (":END:")
 
-  print ""
+  print ("")
 
 # Debug code
 # print_orgmode_entry("subject", "2012-07-27T11:10:53Z", "2012-07-27T11:15:53Z", "location", "participants")
@@ -96,7 +108,7 @@ request = """<?xml version="1.0" encoding="utf-8"?>
   <soap:Body>
     <FindItem Traversal="Shallow" xmlns="http://schemas.microsoft.com/exchange/services/2006/messages">
       <ItemShape>
-        <t:BaseShape>Default</t:BaseShape>
+        <t:BaseShape>AllProperties</t:BaseShape>
         <t:AdditionalProperties>
           <t:FieldURI FieldURI="calendar:MyResponseType"/>
         </t:AdditionalProperties>
@@ -156,8 +168,8 @@ c.close()
 data = body.getvalue()
 
 # Debug code
-# print data
-# exit(0)
+#print data
+#exit(0)
 
 # Parse the result xml
 root = etree.fromstring(data)
@@ -190,6 +202,16 @@ for element in elements:
   else:
     start = ""
 
+  reminderElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}ReminderDueBy')
+  if reminderElem is not "":
+    reminder = reminderElem.text
+  else:
+    reminder = ""
+
+  reminderElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}ReminderIsSet')
+  if reminderElem is not "true":
+    reminder = ""
+    
   endElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}End')
   if endElem is not None:
     end = endElem.text
@@ -202,4 +224,17 @@ for element in elements:
   else:
     response = ""
 
-  print_orgmode_entry(subject, start, end, location, response)
+  participantsElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}DisplayTo')
+  if participantsElem is not "":
+    participants = participantsElem.text
+  else:
+    participants = ""
+
+  isCancelledElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}IsCancelled')
+  if isCancelledElem is not "":
+    cancelled = isCancelledElem.text
+  else:
+    cancelled = ""
+
+  if cancelled is not "true":
+    print_orgmode_entry(subject, start, end, reminder, location, response, participants)
