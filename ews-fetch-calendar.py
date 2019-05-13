@@ -56,11 +56,7 @@ def format_orgmode_time(dateObj):
   return dateObj.strftime("%H:%M")
 
 # Helper function to write an orgmode entry
-def print_orgmode_entry(subject, start, end, reminder, location, response, participants):
-  startDate = parse_ews_date(start);
-  endDate = parse_ews_date(end);
-  reminderDate = parse_ews_date(reminder)
-  
+def print_orgmode_entry(subject, startDate, endDate, reminder, location, response, participants):
   # if subject is not None:
     # if dateStr != "":
       # print "* " + subject.encode('utf-8', 'ignore')
@@ -79,7 +75,11 @@ def print_orgmode_entry(subject, start, end, reminder, location, response, parti
   else:
     dateStr = "SCHEDULED: <" +  format_orgmode_date(startDate) + ">--<" + format_orgmode_date(endDate) + ">"
 
-  reminderStr = "DEADLINE: <" + format_orgmode_date(reminderDate) + "-" + format_orgmode_time(reminderDate) + ">"
+  if reminder is "":
+    reminderStr = ""
+  else:
+    reminderDate = parse_ews_date(reminder)
+    reminderStr = "DEADLINE: <" + format_orgmode_date(reminderDate) + "-" + format_orgmode_time(reminderDate) + ">"
     
   print (dateStr + " " + reminderStr)
     
@@ -98,8 +98,8 @@ def print_orgmode_entry(subject, start, end, reminder, location, response, parti
 
 # Build the soap request
 # For CalendarItem documentation, http://msdn.microsoft.com/en-us/library/exchange/aa564765(v=exchg.140).aspx
-start = date.today() - timedelta(days=daysHistory)
-end = date.today() + timedelta(days=daysFuture)
+queryStart = date.today() - timedelta(days=daysHistory)
+queryEnd = date.today() + timedelta(days=daysFuture)
 request = """<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -119,7 +119,7 @@ request = """<?xml version="1.0" encoding="utf-8"?>
       </ParentFolderIds>
     </FindItem>
   </soap:Body>
-</soap:Envelope>""".format(start, end, maxEntries)
+</soap:Envelope>""".format(queryStart, queryEnd, maxEntries)
 request_len = len(request)
 request = StringIO(request)
 # Debug code
@@ -236,5 +236,8 @@ for element in elements:
   else:
     cancelled = ""
 
-  if cancelled is not "true":
-    print_orgmode_entry(subject, start, end, reminder, location, response, participants)
+  startDate = parse_ews_date(start);
+  endDate = parse_ews_date(end);
+
+  if cancelled is not "true" and (startDate.date() > queryStart or endDate.date() > queryStart):
+    print_orgmode_entry(subject, startDate, endDate, reminder, location, response, participants)
