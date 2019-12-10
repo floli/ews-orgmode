@@ -10,15 +10,15 @@ from datetime import datetime
 from datetime import date
 from datetime import timedelta
 from pytz import timezone
-from StringIO import StringIO
+from io import BytesIO
 import pytz
 import pycurl
 import base64
-import ConfigParser
+import configparser
 
 # Read the config file
 timezoneLocation = os.getenv('TZ', 'UTC')
-config = ConfigParser.RawConfigParser({
+config = configparser.RawConfigParser({
     'path': '/ews/Exchange.asmx',
     'username': '',
     'password': '',
@@ -69,7 +69,7 @@ def print_orgmode_entry(subject, startDate, endDate, reminder, location, respons
       # print "* " + subject.encode('utf-8', 'ignore')
 
     if subject is not None:
-        print("* " + subject.encode('utf-8', 'ignore'))
+        print("* " + subject)
     else:
         print("* Kein Betreff")
 
@@ -96,9 +96,9 @@ def print_orgmode_entry(subject, startDate, endDate, reminder, location, respons
 
     if location is not None:
         print(":PROPERTIES:")
-        print(":LOCATION: " + location.encode('utf-8'))
-        print(":RESPONSE: " + response.encode('utf-8'))
-        print(":PARTICIPANTS: " + participants.encode('utf-8'))
+        print(":LOCATION: " + location)
+        print(":RESPONSE: " + response)
+        print(":PARTICIPANTS: " + participants)
         print(":END:")
 
     print("")
@@ -133,7 +133,7 @@ request = """<?xml version="1.0" encoding="utf-8"?>
   </soap:Body>
 </soap:Envelope>""".format(queryStart, queryEnd, maxEntries)
 request_len = len(request)
-request = StringIO(request)
+request = BytesIO(request.encode("utf-8"))
 # Debug code
 # print request.getvalue()
 # exit(0)
@@ -142,8 +142,8 @@ h = []
 h.append('Content-Type: text/xml; charset=UTF-8')
 h.append('Content-Length: %d' % request_len)
 
-header = StringIO()
-body = StringIO()
+header = BytesIO()
+body = BytesIO()
 
 c = pycurl.Curl()
 # Debug code
