@@ -19,15 +19,15 @@ import ConfigParser
 # Read the config file
 timezoneLocation = os.getenv('TZ', 'UTC')
 config = ConfigParser.RawConfigParser({
-  'path': '/ews/Exchange.asmx',
-  'username': '',
-  'password': '',
-  'auth_type': 'any',
-  'cainfo': '',
-  'timezone': timezoneLocation,
-  'days_history': 7,
-  'days_future': 30,
-  'max_entries': 100})
+    'path': '/ews/Exchange.asmx',
+    'username': '',
+    'password': '',
+    'auth_type': 'any',
+    'cainfo': '',
+    'timezone': timezoneLocation,
+    'days_history': 7,
+    'days_future': 30,
+    'max_entries': 100})
 dir = os.path.dirname(os.path.realpath(__file__))
 config.read(os.path.join(dir, 'config.cfg'))
 
@@ -43,58 +43,70 @@ daysHistory = config.getint('ews-orgmode', 'days_history')
 daysFuture = config.getint('ews-orgmode', 'days_future')
 maxEntries = config.getint('ews-orgmode', 'max_entries')
 
+
 def parse_ews_date(dateStr):
-  d = datetime.strptime(dateStr, "%Y-%m-%dT%H:%M:%SZ")
-  exchangeTz = pytz.utc
-  localTz = timezone(timezoneLocation)
-  return exchangeTz.localize(d).astimezone(localTz);
+    d = datetime.strptime(dateStr, "%Y-%m-%dT%H:%M:%SZ")
+    exchangeTz = pytz.utc
+    localTz = timezone(timezoneLocation)
+    return exchangeTz.localize(d).astimezone(localTz)
+
 
 def format_orgmode_date(dateObj):
-  return dateObj.strftime("%Y-%m-%d %H:%M")
+    return dateObj.strftime("%Y-%m-%d %H:%M")
+
 
 def format_orgmode_time(dateObj):
-  return dateObj.strftime("%H:%M")
+    return dateObj.strftime("%H:%M")
 
 # Helper function to write an orgmode entry
+
+
 def print_orgmode_entry(subject, startDate, endDate, reminder, location, response, participants):
-  # if subject is not None:
+    # if subject is not None:
     # if dateStr != "":
       # print "* " + subject.encode('utf-8', 'ignore')
     # else:
       # print "* " + subject.encode('utf-8', 'ignore')
 
-  if subject is not None:
-    print ("* " + subject.encode('utf-8', 'ignore'))
-  else:
-    print ("* Kein Betreff")
-  
-  # Check if the appointment starts and ends on the same day and use proper formatting
-  dateStr = ""
-  if startDate.date() == endDate.date():
-    dateStr = "SCHEDULED: <" +  format_orgmode_date(startDate) + "-" + format_orgmode_time(endDate) + ">"
-  else:
-    dateStr = "SCHEDULED: <" +  format_orgmode_date(startDate) + ">--<" + format_orgmode_date(endDate) + ">"
+    if subject is not None:
+        print("* " + subject.encode('utf-8', 'ignore'))
+    else:
+        print("* Kein Betreff")
 
-  if reminder is "":
-    reminderStr = ""
-  else:
-    reminderDate = parse_ews_date(reminder)
-    reminderStr = "DEADLINE: <" + format_orgmode_date(reminderDate) + "-" + format_orgmode_time(reminderDate) + ">"
-    
-  print (dateStr + " " + reminderStr)
-    
-  if location is not None:
-    print (":PROPERTIES:")
-    print (":LOCATION: " + location.encode('utf-8'))
-    print (":RESPONSE: " + response.encode('utf-8'))
-    print (":PARTICIPANTS: " + participants.encode('utf-8'))
-    print (":END:")
+    # Check if the appointment starts and ends on the same day and use proper formatting
+    dateStr = ""
+    if startDate.date() == endDate.date():
+        dateStr = "SCHEDULED: <" + \
+            format_orgmode_date(startDate) + "-" + \
+            format_orgmode_time(endDate) + ">"
+    else:
+        dateStr = "SCHEDULED: <" + \
+            format_orgmode_date(startDate) + ">--<" + \
+            format_orgmode_date(endDate) + ">"
 
-  print ("")
+    if reminder is "":
+        reminderStr = ""
+    else:
+        reminderDate = parse_ews_date(reminder)
+        reminderStr = "DEADLINE: <" + \
+            format_orgmode_date(reminderDate) + "-" + \
+            format_orgmode_time(reminderDate) + ">"
+
+    print(dateStr + " " + reminderStr)
+
+    if location is not None:
+        print(":PROPERTIES:")
+        print(":LOCATION: " + location.encode('utf-8'))
+        print(":RESPONSE: " + response.encode('utf-8'))
+        print(":PARTICIPANTS: " + participants.encode('utf-8'))
+        print(":END:")
+
+    print("")
 
 # Debug code
 # print_orgmode_entry("subject", "2012-07-27T11:10:53Z", "2012-07-27T11:15:53Z", "location", "participants")
 # exit(0)
+
 
 # Build the soap request
 # For CalendarItem documentation, http://msdn.microsoft.com/en-us/library/exchange/aa564765(v=exchg.140).aspx
@@ -128,7 +140,7 @@ request = StringIO(request)
 
 h = []
 h.append('Content-Type: text/xml; charset=UTF-8')
-h.append('Content-Length: %d' % request_len);
+h.append('Content-Length: %d' % request_len)
 
 header = StringIO()
 body = StringIO()
@@ -142,19 +154,19 @@ c.setopt(c.POST, 1)
 c.setopt(c.HTTPHEADER, h)
 
 if ewsAuthType == 'digest':
-  c.setopt(c.HTTPAUTH, c.HTTPAUTH_DIGEST)
+    c.setopt(c.HTTPAUTH, c.HTTPAUTH_DIGEST)
 elif ewsAuthType == 'basic':
-  c.setopt(c.HTTPAUTH, c.HTTPAUTH_BASIC)
+    c.setopt(c.HTTPAUTH, c.HTTPAUTH_BASIC)
 elif ewsAuthType == 'ntlm':
-  c.setopt(c.HTTPAUTH, c.HTTPAUTH_NTLM)
+    c.setopt(c.HTTPAUTH, c.HTTPAUTH_NTLM)
 elif ewsAuthType == 'negotiate':
-  c.setopt(c.HTTPAUTH, c.HTTPAUTH_GSSNEGOTIATE)
+    c.setopt(c.HTTPAUTH, c.HTTPAUTH_GSSNEGOTIATE)
 elif ewsAuthType == 'any':
-  c.setopt(c.HTTPAUTH, c.HTTPAUTH_ANYSAFE)
+    c.setopt(c.HTTPAUTH, c.HTTPAUTH_ANYSAFE)
 c.setopt(c.USERPWD, '%s:%s' % (ewsUser, ewsPassword))
 
 if len(ewsCAInfo) > 0:
-  c.setopt(c.CAINFO, ewsCAInfo)
+    c.setopt(c.CAINFO, ewsCAInfo)
 
 # http://stackoverflow.com/questions/27808835/fail-to-assign-io-object-to-writedata-pycurl
 c.setopt(c.WRITEFUNCTION, body.write)
@@ -168,8 +180,8 @@ c.close()
 data = body.getvalue()
 
 # Debug code
-#print data
-#exit(0)
+# print data
+# exit(0)
 
 # Parse the result xml
 root = etree.fromstring(data)
@@ -184,60 +196,70 @@ namespaces = {
 # Print calendar elements
 elements = root.xpath(xpathStr, namespaces=namespaces)
 for element in elements:
-  subjectElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}Subject')
-  if subjectElem is not None:
-    subject = subjectElem.text
-  else:
-    subject = ""
+    subjectElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}Subject')
+    if subjectElem is not None:
+        subject = subjectElem.text
+    else:
+        subject = ""
 
-  locationElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}Location')
-  if locationElem is not None:
-    location = locationElem.text
-  else:
-    location = ""
+    locationElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}Location')
+    if locationElem is not None:
+        location = locationElem.text
+    else:
+        location = ""
 
-  startElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}Start')
-  if startElem is not None:
-    start = startElem.text
-  else:
-    start = ""
+    startElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}Start')
+    if startElem is not None:
+        start = startElem.text
+    else:
+        start = ""
 
-  reminderElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}ReminderDueBy')
-  if reminderElem is not "":
-    reminder = reminderElem.text
-  else:
-    reminder = ""
+    reminderElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}ReminderDueBy')
+    if reminderElem is not "":
+        reminder = reminderElem.text
+    else:
+        reminder = ""
 
-  reminderElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}ReminderIsSet')
-  if reminderElem is not "true":
-    reminder = ""
-    
-  endElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}End')
-  if endElem is not None:
-    end = endElem.text
-  else:
-    end = ""
+    reminderElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}ReminderIsSet')
+    if reminderElem is not "true":
+        reminder = ""
 
-  responseElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}MyResponseType')
-  if responseElem is not None:
-    response = responseElem.text
-  else:
-    response = ""
+    endElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}End')
+    if endElem is not None:
+        end = endElem.text
+    else:
+        end = ""
 
-  participantsElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}DisplayTo')
-  if participantsElem is not "":
-    participants = participantsElem.text
-  else:
-    participants = ""
+    responseElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}MyResponseType')
+    if responseElem is not None:
+        response = responseElem.text
+    else:
+        response = ""
 
-  isCancelledElem = element.find('{http://schemas.microsoft.com/exchange/services/2006/types}IsCancelled')
-  if isCancelledElem is not "":
-    cancelled = isCancelledElem.text
-  else:
-    cancelled = ""
+    participantsElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}DisplayTo')
+    if participantsElem is not "":
+        participants = participantsElem.text
+    else:
+        participants = ""
 
-  startDate = parse_ews_date(start);
-  endDate = parse_ews_date(end);
+    isCancelledElem = element.find(
+        '{http://schemas.microsoft.com/exchange/services/2006/types}IsCancelled')
+    if isCancelledElem is not "":
+        cancelled = isCancelledElem.text
+    else:
+        cancelled = ""
 
-  if cancelled is not "true" and (startDate.date() > queryStart or endDate.date() > queryStart):
-    print_orgmode_entry(subject, startDate, endDate, reminder, location, response, participants)
+    startDate = parse_ews_date(start)
+    endDate = parse_ews_date(end)
+
+    if cancelled is not "true" and (startDate.date() > queryStart or endDate.date() > queryStart):
+        print_orgmode_entry(subject, startDate, endDate,
+                            reminder, location, response, participants)
