@@ -9,3 +9,4 @@ days_history=7
 days_future=30
 max_entries=100
 cainfo=/path/to/root_ca.crt
+schedule_items = false

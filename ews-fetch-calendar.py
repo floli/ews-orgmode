@@ -42,6 +42,7 @@ timezoneLocation = config.get('ews-orgmode', 'timezone')
 daysHistory = config.getint('ews-orgmode', 'days_history')
 daysFuture = config.getint('ews-orgmode', 'days_future')
 maxEntries = config.getint('ews-orgmode', 'max_entries')
+schedule_items = config.getboolean('ews-orgmode', 'schedule_items')
 
 
 def parse_ews_date(dateStr):
@@ -61,7 +62,7 @@ def format_orgmode_time(dateObj):
 # Helper function to write an orgmode entry
 
 
-def print_orgmode_entry(subject, startDate, endDate, reminder, location, response, participants):
+def print_orgmode_entry(subject, startDate, endDate, reminder, location, response, participants, schedule):
     # if subject is not None:
     # if dateStr != "":
       # print "* " + subject.encode('utf-8', 'ignore')
@@ -74,15 +75,17 @@ def print_orgmode_entry(subject, startDate, endDate, reminder, location, respons
         print("* Kein Betreff")
 
     # Check if the appointment starts and ends on the same day and use proper formatting
-    dateStr = ""
     if startDate.date() == endDate.date():
-        dateStr = "SCHEDULED: <" + \
-            format_orgmode_date(startDate) + "-" + \
-            format_orgmode_time(endDate) + ">"
+      dateStr = "{schedule}<{start}-{end}>".format(
+        schedule = "SCHEDULED: " if schedule else "",
+        start = format_orgmode_date(startDate),
+        end = format_orgmode_time(endDate))
+
     else:
-        dateStr = "SCHEDULED: <" + \
-            format_orgmode_date(startDate) + ">--<" + \
-            format_orgmode_date(endDate) + ">"
+      dateStr = "{schedule}<{start}-{end}>".format(
+        schedule = "SCHEDULED: " if schedule else "",
+        start = format_orgmode_date(startDate),
+        end = format_orgmode_time(endDate))
 
     if reminder is "":
         reminderStr = ""
@@ -262,4 +265,4 @@ for element in elements:
 
     if cancelled is not "true" and (startDate.date() > queryStart or endDate.date() > queryStart):
         print_orgmode_entry(subject, startDate, endDate,
-                            reminder, location, response, participants)
+                            reminder, location, response, participants, schedule_items)
